@@ -434,6 +434,7 @@ export default function PollPage() {
                 showDates={poll.show_dates !== false}
                 slotCounts={slotCounts}
                 maxCount={maxCount}
+                totalRespondents={respondents.length}
               />
 
               <div className="mt-6 flex flex-wrap gap-2">

@@ -11,6 +11,7 @@ interface HeatmapGridProps {
   showDates: boolean;
   slotCounts: Map<string, { count: number; names: string[] }>;
   maxCount: number;
+  totalRespondents: number;
 }
 
 function formatHour(hour: number, use24Hour: boolean): string {
@@ -39,19 +40,21 @@ function getSlotKey(dayIndex: number, hour: number): string {
   return `${dayIndex}-${hour}`;
 }
 
-function getCellColor(count: number, maxCount: number): string {
-  if (count === 0 || maxCount === 0) return "bg-[#E5E7EB]";
-  const ratio = count / maxCount;
-  if (ratio <= 0.25) return "bg-[#1F3057]/20";
-  if (ratio <= 0.5) return "bg-[#1F3057]/40";
-  if (ratio <= 0.75) return "bg-[#1F3057]/70";
-  return "bg-[#1F3057]";
+// Shade by the fraction of the group that is free, so a slot where everyone
+// overlaps is clearly the darkest.
+function getCellColor(count: number, total: number): string {
+  if (count === 0 || total === 0) return "bg-[#E5E7EB]";
+  const ratio = count / total;
+  if (ratio >= 1) return "bg-[#1F3057]";
+  if (ratio >= 0.66) return "bg-[#1F3057]/75";
+  if (ratio >= 0.5) return "bg-[#1F3057]/55";
+  if (ratio >= 0.34) return "bg-[#1F3057]/40";
+  return "bg-[#1F3057]/25";
 }
 
-function getTextColor(count: number, maxCount: number): string {
-  if (count === 0 || maxCount === 0) return "text-[#9CA3AF]";
-  const ratio = count / maxCount;
-  return ratio > 0.5 ? "text-white" : "text-[#1F3057]";
+function getTextColor(count: number, total: number): string {
+  if (count === 0 || total === 0) return "text-[#9CA3AF]";
+  return count / total >= 0.5 ? "text-white" : "text-[#1F3057]";
 }
 
 export default function HeatmapGrid({
@@ -63,6 +66,7 @@ export default function HeatmapGrid({
   showDates,
   slotCounts,
   maxCount,
+  totalRespondents,
 }: HeatmapGridProps) {
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -101,10 +105,15 @@ export default function HeatmapGrid({
                 const key = getSlotKey(d, hour);
                 const data = slotCounts.get(key);
                 const count = data?.count || 0;
+                const everyone = count > 0 && count === totalRespondents;
                 return (
                   <td
                     key={key}
-                    className={`border border-white/50 h-8 text-center text-xs font-medium cursor-default transition-colors ${getCellColor(count, maxCount)} ${getTextColor(count, maxCount)}`}
+                    className={`border border-white/50 h-8 text-center text-xs font-semibold cursor-default transition-colors ${getCellColor(count, totalRespondents)} ${getTextColor(count, totalRespondents)} ${
+                      everyone && totalRespondents > 1
+                        ? "outline outline-2 -outline-offset-2 outline-[#0B1220]"
+                        : ""
+                    }`}
                     onMouseEnter={(e) => {
                       setHoveredSlot(key);
                       const rect = e.currentTarget.getBoundingClientRect();
@@ -123,6 +132,23 @@ export default function HeatmapGrid({
           ))}
         </tbody>
       </table>
+
+      <div className="mt-3 flex items-center gap-2 text-xs text-[#6B7280]">
+        <span>1 free</span>
+        <div className="flex gap-0.5">
+          <span className="h-3.5 w-6 rounded-sm bg-[#1F3057]/25" />
+          <span className="h-3.5 w-6 rounded-sm bg-[#1F3057]/40" />
+          <span className="h-3.5 w-6 rounded-sm bg-[#1F3057]/55" />
+          <span className="h-3.5 w-6 rounded-sm bg-[#1F3057]/75" />
+          <span className="h-3.5 w-6 rounded-sm bg-[#1F3057] outline outline-2 -outline-offset-2 outline-[#0B1220]" />
+        </div>
+        <span>
+          all {totalRespondents} free
+        </span>
+        <span className="ml-1 text-[#9CA3AF]">
+          — numbers show how many people overlap
+        </span>
+      </div>
 
       {hoveredSlot && hoveredData && hoveredData.count > 0 && (
         <div
