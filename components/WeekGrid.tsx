@@ -18,18 +18,9 @@ function getSlotKey(dayIndex: number, hour: number): string {
   return `${dayIndex}-${hour}`;
 }
 
-function slotToUtc(
-  startDate: string,
-  dayIndex: number,
-  hour: number,
-  timezone: string
-): string {
-  const date = new Date(startDate + "T00:00:00");
-  date.setDate(date.getDate() + dayIndex);
-
-  const localStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T${String(hour).padStart(2, "0")}:00:00`;
-
-  const formatter = new Intl.DateTimeFormat("en-US", {
+// Offset (ms) of `timezone` from UTC at the given instant: wallClock - utc.
+function tzOffsetMs(timezone: string, date: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
     year: "numeric",
     month: "2-digit",
@@ -38,18 +29,47 @@ function slotToUtc(
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
-  });
-
-  const tempDate = new Date(localStr + "Z");
-  const parts = formatter.formatToParts(tempDate);
-  const getPart = (type: string) =>
-    parts.find((p) => p.type === type)?.value || "0";
-  const offsetDate = new Date(
-    `${getPart("year")}-${getPart("month")}-${getPart("day")}T${getPart("hour")}:${getPart("minute")}:${getPart("second")}Z`
+  }).formatToParts(date);
+  const map: Record<string, string> = {};
+  for (const p of parts) map[p.type] = p.value;
+  let hour = parseInt(map.hour, 10);
+  if (hour === 24) hour = 0;
+  const asUTC = Date.UTC(
+    parseInt(map.year, 10),
+    parseInt(map.month, 10) - 1,
+    parseInt(map.day, 10),
+    hour,
+    parseInt(map.minute, 10),
+    parseInt(map.second, 10)
   );
-  const diffMs = offsetDate.getTime() - tempDate.getTime();
-  const utcDate = new Date(new Date(localStr).getTime() - diffMs);
-  return utcDate.toISOString();
+  return asUTC - date.getTime();
+}
+
+function slotToUtc(
+  startDate: string,
+  dayIndex: number,
+  hour: number,
+  timezone: string
+): string {
+  // Calendar date for startDate + dayIndex (done in UTC to avoid DST drift).
+  const base = new Date(startDate + "T00:00:00Z");
+  base.setUTCDate(base.getUTCDate() + dayIndex);
+
+  // The target wall-clock (hour:00 on that day) treated as if it were UTC.
+  const guess = Date.UTC(
+    base.getUTCFullYear(),
+    base.getUTCMonth(),
+    base.getUTCDate(),
+    hour,
+    0,
+    0
+  );
+
+  // Real UTC instant = wall-clock minus the zone's offset at that moment.
+  // Refine once so slots on a DST boundary resolve correctly.
+  const offset1 = tzOffsetMs(timezone, new Date(guess));
+  const offset2 = tzOffsetMs(timezone, new Date(guess - offset1));
+  return new Date(guess - offset2).toISOString();
 }
 
 export function slotKeyToUtc(
