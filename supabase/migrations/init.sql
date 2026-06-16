@@ -1,4 +1,4 @@
--- Sarbat Availability Poll schema
+-- Availability Poll schema
 
 create extension if not exists "pgcrypto";
 

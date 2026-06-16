@@ -74,7 +74,7 @@ export default function NewPollPage() {
           <input
             name="title"
             required
-            placeholder="e.g. Sarbat weekly planning sync"
+            placeholder="e.g. Weekly planning sync"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F3057]"
           />
         </div>

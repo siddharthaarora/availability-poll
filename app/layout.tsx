@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sarbat — Find a time everyone can make",
+  title: "Availability Poll — Find a time everyone can make",
   description: "A minimalist availability poll for scheduling meetings.",
 };
 
@@ -20,12 +20,12 @@ export default function RootLayout({
               href="/"
               className="text-sm font-semibold tracking-tight text-[#1F3057]"
             >
-              sarbat
+              availability poll
             </a>
           </header>
           <main className="flex-1">{children}</main>
           <footer className="px-6 py-6 text-center text-xs text-[#6B7280]">
-            Built for Sarbat — A Sikh Conference
+            A free, open-source scheduling tool
           </footer>
         </div>
       </body>

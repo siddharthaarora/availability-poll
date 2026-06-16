@@ -55,9 +55,9 @@ export default function PollPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const stored24 = localStorage.getItem("sarbat-24h");
+    const stored24 = localStorage.getItem("avpoll-24h");
     if (stored24 !== null) setUse24Hour(stored24 === "true");
-    const storedTz = localStorage.getItem("sarbat-tz");
+    const storedTz = localStorage.getItem("avpoll-tz");
     if (storedTz) {
       setTimezone(storedTz);
       setViewTimezone(storedTz);
@@ -65,11 +65,11 @@ export default function PollPage() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("sarbat-24h", String(use24Hour));
+    localStorage.setItem("avpoll-24h", String(use24Hour));
   }, [use24Hour]);
 
   useEffect(() => {
-    localStorage.setItem("sarbat-tz", viewTimezone);
+    localStorage.setItem("avpoll-tz", viewTimezone);
   }, [viewTimezone]);
 
   useEffect(() => {
