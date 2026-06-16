@@ -8,9 +8,7 @@ import { getBrowserTimezone } from "@/lib/timezones";
 import WeekGrid, { slotKeyToUtc } from "@/components/WeekGrid";
 import HeatmapGrid from "@/components/HeatmapGrid";
 import ParticipantForm from "@/components/ParticipantForm";
-import TimeFormatToggle from "@/components/TimeFormatToggle";
 import ViewToggle from "@/components/ViewToggle";
-import TimezoneSelector from "@/components/TimezoneSelector";
 import CopyShareButton from "@/components/CopyShareButton";
 import DownloadCsvButton from "@/components/DownloadCsvButton";
 
@@ -20,14 +18,31 @@ function utcToSlotKey(
   numDays: number,
   startHour: number,
   endHour: number,
-  _timezone: string
+  timezone: string
 ): string | null {
-  const d = new Date(slotUtc);
-  const start = new Date(startDate + "T00:00:00Z");
-  const dayIndex = Math.floor(
-    (d.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
+  // Convert the absolute instant into the viewer's timezone wall-clock, so the
+  // slot lands on the same (day, hour) the grid uses. This is the inverse of
+  // the selection conversion in WeekGrid's slotToUtc.
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(slotUtc));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+
+  let hour = parseInt(get("hour"), 10);
+  if (hour === 24) hour = 0;
+
+  const localDate = `${get("year")}-${get("month")}-${get("day")}`;
+  const dayIndex = Math.round(
+    (Date.parse(localDate + "T00:00:00Z") -
+      Date.parse(startDate + "T00:00:00Z")) /
+      (24 * 60 * 60 * 1000)
   );
-  const hour = d.getUTCHours();
+
   if (dayIndex < 0 || dayIndex >= numDays) return null;
   if (hour < startHour || hour >= endHour) return null;
   return `${dayIndex}-${hour}`;
@@ -233,6 +248,21 @@ export default function PollPage() {
     setSubmitting(false);
 
     if (res.ok) {
+      const { data: respData } = await supabase
+        .from("respondents")
+        .select("*")
+        .eq("poll_id", poll.id);
+      setRespondents(respData || []);
+
+      if (respData && respData.length > 0) {
+        const ids = respData.map((r) => r.id);
+        const { data: availData } = await supabase
+          .from("availability")
+          .select("*")
+          .in("respondent_id", ids);
+        setAvailability(availData || []);
+      }
+
       setView("results");
       setToast("Thanks, your availability is in!");
       setTimeout(() => setToast(""), 3000);
@@ -264,13 +294,10 @@ export default function PollPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {justCreated && (
-        <div className="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-center gap-3">
+        <div className="mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 flex items-center gap-3 flex-wrap">
           <span className="text-sm text-green-800">
-            Poll created! Share this link with your group:
+            Poll created! Share the link with your group.
           </span>
-          <code className="text-sm bg-white rounded px-2 py-0.5 border border-green-200 text-green-900 flex-shrink-0">
-            {shareUrl}
-          </code>
           <CopyShareButton url={shareUrl} />
         </div>
       )}
@@ -281,42 +308,37 @@ export default function PollPage() {
         </div>
       )}
 
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-          <h1 className="text-xl font-semibold tracking-tight flex-1">
+      <div className="mb-5">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {poll.title}
           </h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                isClosed
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-green-100 text-green-800"
-              }`}
-            >
-              {isClosed ? "Closed" : "Live"}
-            </span>
-          </div>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${
+              isClosed
+                ? "bg-amber-100 text-amber-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {isClosed ? "Closed" : "Live"}
+          </span>
+          <div className="flex-1" />
+          <CopyShareButton url={shareUrl} />
         </div>
         {poll.description && (
-          <p className="text-sm text-[#6B7280]">{poll.description}</p>
+          <p className="text-sm text-[#6B7280] mt-1">{poll.description}</p>
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
-        {!isClosed && (
+      {!isClosed && (
+        <div className="mb-5">
           <ViewToggle view={view} onChange={setView} />
-        )}
-        <TimeFormatToggle use24Hour={use24Hour} onChange={setUse24Hour} />
-        <div className="w-64">
-          <TimezoneSelector value={viewTimezone} onChange={setViewTimezone} />
         </div>
-        {!justCreated && <CopyShareButton url={shareUrl} />}
-      </div>
+      )}
 
       {view === "selection" && !isClosed ? (
         <div>
-          <div className="mb-6">
+          <div className="mb-5">
             <ParticipantForm
               name={name}
               email={email}
@@ -327,29 +349,20 @@ export default function PollPage() {
             />
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-end gap-2 mb-2">
             <button
               type="button"
               onClick={handleSelectAll}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-[#6B7280] hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-[#6B7280] hover:bg-gray-50 transition-colors"
             >
               Select all
             </button>
             <button
               type="button"
               onClick={handleUnselectAll}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-[#6B7280] hover:bg-gray-50 transition-colors"
+              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-[#6B7280] hover:bg-gray-50 transition-colors"
             >
               Unselect all
-            </button>
-            <div className="flex-1" />
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-lg bg-[#111827] px-5 py-2 text-sm font-medium text-white hover:bg-[#1F3057] transition-colors disabled:opacity-50"
-            >
-              {submitting ? "Submitting…" : "Submit Selection"}
             </button>
           </div>
 
@@ -365,7 +378,18 @@ export default function PollPage() {
             onSelectionChange={setSelected}
           />
 
-          <div className="mt-4 space-y-1 text-xs text-[#9CA3AF]">
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="rounded-lg bg-[#111827] px-5 py-2 text-sm font-medium text-white hover:bg-[#1F3057] transition-colors disabled:opacity-50"
+            >
+              {submitting ? "Submitting…" : "Submit"}
+            </button>
+          </div>
+
+          <div className="mt-3 space-y-1 text-xs text-[#9CA3AF]">
             <p>Click and drag cells to select multiple cells at once.</p>
             <p>
               Click a date to select the entire column, or a time to select the

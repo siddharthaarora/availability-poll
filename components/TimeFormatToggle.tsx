@@ -10,10 +10,10 @@ export default function TimeFormatToggle({
   onChange,
 }: TimeFormatToggleProps) {
   return (
-    <div className="inline-flex rounded-lg border border-gray-300 text-sm overflow-hidden">
+    <div className="inline-flex rounded-md border border-gray-300 text-xs overflow-hidden">
       <button
         type="button"
-        className={`px-3 py-1.5 transition-colors ${
+        className={`px-2 py-1 transition-colors ${
           !use24Hour
             ? "bg-[#1F3057] text-white"
             : "bg-white text-[#6B7280] hover:bg-gray-50"
@@ -24,7 +24,7 @@ export default function TimeFormatToggle({
       </button>
       <button
         type="button"
-        className={`px-3 py-1.5 transition-colors ${
+        className={`px-2 py-1 transition-colors ${
           use24Hour
             ? "bg-[#1F3057] text-white"
             : "bg-white text-[#6B7280] hover:bg-gray-50"

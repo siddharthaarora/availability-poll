@@ -27,9 +27,18 @@ export default function TimezoneSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-[#1F3057] bg-white"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-[#1F3057] bg-white"
       >
-        {value.replace(/_/g, " ")}
+        <span className="truncate">{value.replace(/_/g, " ")}</span>
+        <svg
+          className="h-4 w-4 flex-shrink-0 text-[#9CA3AF]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
       {open && (
         <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
