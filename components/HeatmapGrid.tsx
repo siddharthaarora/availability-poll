@@ -8,6 +8,7 @@ interface HeatmapGridProps {
   startHour: number;
   endHour: number;
   use24Hour: boolean;
+  showDates: boolean;
   slotCounts: Map<string, { count: number; names: string[] }>;
   maxCount: number;
 }
@@ -20,10 +21,15 @@ function formatHour(hour: number, use24Hour: boolean): string {
   return `${hour - 12} PM`;
 }
 
-function formatDayHeader(startDate: string, dayIndex: number): string {
+function formatDayHeader(
+  startDate: string,
+  dayIndex: number,
+  showDates: boolean
+): string {
   const d = new Date(startDate + "T12:00:00");
   d.setDate(d.getDate() + dayIndex);
   const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+  if (!showDates) return weekday;
   const month = d.toLocaleDateString("en-US", { month: "short" });
   const day = d.getDate();
   return `${weekday}\n${month} ${day}`;
@@ -54,6 +60,7 @@ export default function HeatmapGrid({
   startHour,
   endHour,
   use24Hour,
+  showDates,
   slotCounts,
   maxCount,
 }: HeatmapGridProps) {
@@ -70,16 +77,16 @@ export default function HeatmapGrid({
 
   return (
     <div className="relative overflow-x-auto">
-      <table className="border-collapse">
+      <table className="w-full table-fixed border-collapse">
         <thead>
           <tr>
             <th className="w-16" />
             {days.map((d) => (
               <th
                 key={d}
-                className="px-1 py-2 text-xs font-medium text-[#6B7280] whitespace-pre-line text-center min-w-[60px]"
+                className="px-1 py-2 text-xs font-medium text-[#6B7280] whitespace-pre-line text-center"
               >
-                {formatDayHeader(startDate, d)}
+                {formatDayHeader(startDate, d, showDates)}
               </th>
             ))}
           </tr>
@@ -87,7 +94,7 @@ export default function HeatmapGrid({
         <tbody>
           {hours.map((hour) => (
             <tr key={hour}>
-              <td className="pr-2 py-0 text-xs text-[#6B7280] text-right whitespace-nowrap">
+              <td className="w-16 pr-2 py-0 text-xs text-[#6B7280] text-right whitespace-nowrap">
                 {formatHour(hour, use24Hour)}
               </td>
               {days.map((d) => {
@@ -97,7 +104,7 @@ export default function HeatmapGrid({
                 return (
                   <td
                     key={key}
-                    className={`border border-white/50 w-[60px] h-[28px] text-center text-xs font-medium cursor-default transition-colors ${getCellColor(count, maxCount)} ${getTextColor(count, maxCount)}`}
+                    className={`border border-white/50 h-8 text-center text-xs font-medium cursor-default transition-colors ${getCellColor(count, maxCount)} ${getTextColor(count, maxCount)}`}
                     onMouseEnter={(e) => {
                       setHoveredSlot(key);
                       const rect = e.currentTarget.getBoundingClientRect();

@@ -7,6 +7,7 @@ export interface Poll {
   num_days: number;
   start_hour: number;
   end_hour: number;
+  show_dates: boolean;
   closes_at: string | null;
   created_at: string;
 }

@@ -39,6 +39,7 @@ export default function NewPollPage() {
       num_days: Number(form.get("num_days")),
       start_hour: Number(form.get("start_hour")),
       end_hour: Number(form.get("end_hour")),
+      show_dates: form.get("days_only") !== "on",
       closes_at: closesAt,
     };
 
@@ -180,6 +181,22 @@ export default function NewPollPage() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-start gap-2.5 rounded-lg border border-gray-200 px-3 py-2.5">
+          <input
+            id="days_only"
+            name="days_only"
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1F3057] focus:ring-[#1F3057]"
+          />
+          <label htmlFor="days_only" className="text-sm">
+            <span className="font-medium">Show days of the week only</span>
+            <span className="block text-[#6B7280]">
+              Hide calendar dates and label columns Mon–Sun (good for recurring
+              weekly plans).
+            </span>
+          </label>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

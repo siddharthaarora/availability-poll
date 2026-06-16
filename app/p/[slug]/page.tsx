@@ -287,10 +287,6 @@ export default function PollPage() {
             {poll.title}
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-[#6B7280]">
-              {respondents.length} participant
-              {respondents.length !== 1 ? "s" : ""}
-            </span>
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${
                 isClosed
@@ -364,6 +360,7 @@ export default function PollPage() {
             endHour={poll.end_hour}
             timezone={timezone}
             use24Hour={use24Hour}
+            showDates={poll.show_dates !== false}
             selected={selected}
             onSelectionChange={setSelected}
           />
@@ -414,6 +411,7 @@ export default function PollPage() {
                 startHour={poll.start_hour}
                 endHour={poll.end_hour}
                 use24Hour={use24Hour}
+                showDates={poll.show_dates !== false}
                 slotCounts={slotCounts}
                 maxCount={maxCount}
               />

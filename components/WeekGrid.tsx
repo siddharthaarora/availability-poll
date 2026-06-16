@@ -9,6 +9,7 @@ interface WeekGridProps {
   endHour: number;
   timezone: string;
   use24Hour: boolean;
+  showDates: boolean;
   selected: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
 }
@@ -68,10 +69,15 @@ function formatHour(hour: number, use24Hour: boolean): string {
   return `${hour - 12} PM`;
 }
 
-function formatDayHeader(startDate: string, dayIndex: number): string {
+function formatDayHeader(
+  startDate: string,
+  dayIndex: number,
+  showDates: boolean
+): string {
   const d = new Date(startDate + "T12:00:00");
   d.setDate(d.getDate() + dayIndex);
   const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+  if (!showDates) return weekday;
   const month = d.toLocaleDateString("en-US", { month: "short" });
   const day = d.getDate();
   return `${weekday}\n${month} ${day}`;
@@ -84,6 +90,7 @@ export default function WeekGrid({
   endHour,
   timezone: _timezone,
   use24Hour,
+  showDates,
   selected,
   onSelectionChange,
 }: WeekGridProps) {
@@ -170,17 +177,17 @@ export default function WeekGrid({
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      <table className="border-collapse">
+      <table className="w-full table-fixed border-collapse">
         <thead>
           <tr>
             <th className="w-16" />
             {days.map((d) => (
               <th
                 key={d}
-                className="px-1 py-2 text-xs font-medium text-[#6B7280] cursor-pointer hover:text-[#1F3057] whitespace-pre-line text-center min-w-[60px]"
+                className="px-1 py-2 text-xs font-medium text-[#6B7280] cursor-pointer hover:text-[#1F3057] whitespace-pre-line text-center"
                 onClick={() => toggleColumn(d)}
               >
-                {formatDayHeader(startDate, d)}
+                {formatDayHeader(startDate, d, showDates)}
               </th>
             ))}
           </tr>
@@ -189,7 +196,7 @@ export default function WeekGrid({
           {hours.map((hour) => (
             <tr key={hour}>
               <td
-                className="pr-2 py-0 text-xs text-[#6B7280] text-right cursor-pointer hover:text-[#1F3057] whitespace-nowrap"
+                className="w-16 pr-2 py-0 text-xs text-[#6B7280] text-right cursor-pointer hover:text-[#1F3057] whitespace-nowrap"
                 onClick={() => toggleRow(hour)}
               >
                 {formatHour(hour, use24Hour)}
@@ -200,7 +207,7 @@ export default function WeekGrid({
                 return (
                   <td
                     key={key}
-                    className={`border border-white/50 w-[60px] h-[28px] cursor-pointer transition-colors ${
+                    className={`border border-white/50 h-8 cursor-pointer transition-colors ${
                       isSelected ? "bg-[#1F3057]" : "bg-[#E5E7EB] hover:bg-[#D1D5DB]"
                     }`}
                     onPointerDown={(e) => {
