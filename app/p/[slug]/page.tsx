@@ -66,17 +66,13 @@ export default function PollPage() {
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState(() => getBrowserTimezone());
   const [use24Hour, setUse24Hour] = useState(false);
-  const [viewTimezone, setViewTimezone] = useState(() => getBrowserTimezone());
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const stored24 = localStorage.getItem("avpoll-24h");
     if (stored24 !== null) setUse24Hour(stored24 === "true");
     const storedTz = localStorage.getItem("avpoll-tz");
-    if (storedTz) {
-      setTimezone(storedTz);
-      setViewTimezone(storedTz);
-    }
+    if (storedTz) setTimezone(storedTz);
   }, []);
 
   useEffect(() => {
@@ -84,8 +80,8 @@ export default function PollPage() {
   }, [use24Hour]);
 
   useEffect(() => {
-    localStorage.setItem("avpoll-tz", viewTimezone);
-  }, [viewTimezone]);
+    localStorage.setItem("avpoll-tz", timezone);
+  }, [timezone]);
 
   useEffect(() => {
     async function load() {
@@ -176,7 +172,7 @@ export default function PollPage() {
         poll.num_days,
         poll.start_hour,
         poll.end_hour,
-        viewTimezone
+        timezone
       );
       if (!key) continue;
       const existing = counts.get(key) || { count: 0, names: [] };
@@ -187,7 +183,7 @@ export default function PollPage() {
     }
 
     return counts;
-  }, [poll, respondents, availability, viewTimezone]);
+  }, [poll, respondents, availability, timezone]);
 
   const maxCount = useMemo(() => {
     let max = 0;
