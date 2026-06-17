@@ -3,3 +3,16 @@
 body {
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* Prevent iOS Safari from auto-zooming on focus: it zooms when a focused
+   control has a font-size below 16px. Force at least 16px on small screens
+   while keeping the smaller desktop sizing. touch-action also suppresses
+   double-tap zoom on the controls. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    touch-action: manipulation;
+  }
+}
