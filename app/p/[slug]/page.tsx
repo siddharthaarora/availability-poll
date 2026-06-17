@@ -10,7 +10,6 @@ import HeatmapGrid from "@/components/HeatmapGrid";
 import ParticipantForm from "@/components/ParticipantForm";
 import ViewToggle from "@/components/ViewToggle";
 import CopyShareButton from "@/components/CopyShareButton";
-import DownloadCsvButton from "@/components/DownloadCsvButton";
 
 function utcToSlotKey(
   slotUtc: string,
@@ -430,11 +429,6 @@ export default function PollPage() {
                   </div>
                 </div>
               )}
-
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1" />
-                <DownloadCsvButton slug={slug} />
-              </div>
 
               <HeatmapGrid
                 startDate={poll.start_date}
