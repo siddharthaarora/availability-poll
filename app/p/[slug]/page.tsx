@@ -229,6 +229,12 @@ export default function PollPage() {
       return;
     }
 
+    if (selected.size === 0) {
+      setToast("Please select at least one time slot.");
+      setTimeout(() => setToast(""), 3000);
+      return;
+    }
+
     setSubmitting(true);
 
     const slots = Array.from(selected).map((key) =>
@@ -378,11 +384,16 @@ export default function PollPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-lg bg-[#111827] px-5 py-2 text-sm font-medium text-white hover:bg-[#1F3057] transition-colors disabled:opacity-50"
+              disabled={submitting || selected.size === 0}
+              className="rounded-lg bg-[#111827] px-5 py-2 text-sm font-medium text-white hover:bg-[#1F3057] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#111827]"
             >
               {submitting ? "Submitting…" : "Submit"}
             </button>
+            {selected.size === 0 && (
+              <p className="mt-2 text-xs text-[#6B7280]">
+                Please select at least one time slot.
+              </p>
+            )}
           </div>
 
           <div className="mt-3 space-y-1 text-xs text-[#9CA3AF]">
